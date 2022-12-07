@@ -12,8 +12,6 @@ class tkinterApp(tk.Tk):
         container = tk.Frame(self) 
         container.pack()
   
-        # container.grid_rowconfigure(0, weight = 1)
-        # container.grid_columnconfigure(0, weight = 1)
 
         self.frames = {} 
   
@@ -53,6 +51,24 @@ class LoginPage(tk.Frame):
         newUser = tk.Button(self, text="Login", padx=10, pady=5, fg="black", bg="#263D42",
         command = lambda : controller.show_frame(Page1))
         newUser.place(x=450, y=300)
+
+        file = open("live_data.csv", "r")
+        lines = file.readlines()
+  
+        count = 0
+
+        for line in lines:
+            count += 1
+            if(count != 1):
+                parsed_tokens = line.strip().split(",")
+                print("Timestamp: {}".format(parsed_tokens[0]))
+                count2 = 0
+                for token in parsed_tokens[1:150]:
+                    print("Value {}: {}".format(count2, token))
+                    count2 +=1
+                print("Classification: {}".format(parsed_tokens[151]))
+
+        file.close() 
    
       
 class Page1(tk.Frame):

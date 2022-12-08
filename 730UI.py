@@ -52,23 +52,28 @@ class LoginPage(tk.Frame):
         command = lambda : controller.show_frame(Page1))
         newUser.place(x=450, y=300)
 
-        file = open("live_data.csv", "r")
-        lines = file.readlines()
-  
-        count = 0
 
-        for line in lines:
-            count += 1
-            if(count != 1):
-                parsed_tokens = line.strip().split(",")
-                print("Timestamp: {}".format(parsed_tokens[0]))
-                count2 = 0
-                for token in parsed_tokens[1:150]:
-                    print("Value {}: {}".format(count2, token))
-                    count2 +=1
-                print("Classification: {}".format(parsed_tokens[151]))
 
-        file.close() 
+def getAcceleration():
+    file = open("live_data.csv", "r")
+    lines = file.readlines()
+    count = 0
+    spikes =0 
+
+    for line in lines:
+        count += 1
+        if(count != 1):
+            parsed_tokens = line.strip().split(",")
+            ax = parsed_tokens[1::3]
+            ay =parsed_tokens[2::3]
+            az =parsed_tokens[3::3]
+            timestamp = parsed_tokens[0]
+            if (parsed_tokens[151] == 'shake'): #need to check what a spike will be called
+                spikes +=1
+    
+    file.close() 
+    return spikes, ax,ay,az, timestamp
+    
    
       
 class Page1(tk.Frame):
@@ -83,6 +88,14 @@ class Page1(tk.Frame):
 
         frame = tk.Frame(self, bg="white")
         frame.place(relwidth=0.5, relheight=0.5, relx=0.4, rely=0.2)
+
+        spikes, ax, az, ay, timestamp = getAcceleration()
+        print("Timestamp: {}".format(timestamp))
+        print("ax: {}".format(ax))
+        print("ay: {}".format(ay))
+        print("az: {}".format(az))
+        print("Number spikes: {}".format(spikes))
+
 
         
 app = tkinterApp()

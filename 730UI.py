@@ -1,14 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
-  
+import pandas as pd
 
-  
 class tkinterApp(tk.Tk):
      
     def __init__(self, *args, **kwargs):
          
         tk.Tk.__init__(self, *args, **kwargs)
-         
+        self.title('Spike counter')
         container = tk.Frame(self) 
         container.pack()
   
@@ -28,7 +27,6 @@ class tkinterApp(tk.Tk):
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
-  
   
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -53,12 +51,11 @@ class LoginPage(tk.Frame):
         newUser = tk.Button(self, text="Login", padx=10, pady=5, fg="black", bg="#263D42",
         command = lambda : controller.show_frame(Page1))
         newUser.place(x=450, y=300)
-   
-      
+
 class Page1(tk.Frame):
-     
+
     def __init__(self, parent, controller):
-         
+
         tk.Frame.__init__(self, parent)
 
         canvas = tk.Canvas(self, height=512, width=1024, bg="#263D42")
@@ -68,6 +65,42 @@ class Page1(tk.Frame):
         frame = tk.Frame(self, bg="white")
         frame.place(relwidth=0.5, relheight=0.5, relx=0.4, rely=0.2)
 
-        
-app = tkinterApp()
-app.mainloop()
+        start_button = tk.Button(self, text="Start", padx=10, pady=5, fg="black", bg="#263D42",
+                          command = self.testFunc)
+        start_button.place(relx = 0.05, rely=0.8)
+
+        end_button = tk.Button(self, text="Stop", padx=10, pady=5, fg="black", bg="#263D42",
+                          command=self.endCounter)
+        end_button.place(relx=0.15, rely=0.8)
+
+        reset_button = tk.Button(self, text="Reset", padx=10, pady=5, fg="black", bg="#263D42",
+                               command=self.reset)
+        reset_button.place(relx=0.25, rely=0.8)
+
+    def testFunc(self):
+        global num
+        global flag
+
+        num = num+1
+        if flag == 1:
+            num = 0
+            flag = 0
+            return
+
+        str1 = tk.StringVar(value=str(num))
+        counter = tk.Label(self, textvariable=str1, bg="#263D42", fg="white", font=('Helvetica 180'))
+        counter.place(relx=0.15, rely=0.3)
+        counter.after(1000, self.testFunc)
+
+    def endCounter(self):
+        global flag
+        flag = 1
+    #
+    # def reset(self):
+    #     self.
+
+if __name__ == "__main__":
+    flag = 0
+    num = 0
+    app = tkinterApp()
+    app.mainloop()

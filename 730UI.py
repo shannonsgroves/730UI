@@ -1,6 +1,10 @@
 import tkinter as tk
-from tkinter import ttk
+from matplotlib import style
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+style.use('ggplot')
 import pandas as pd
+import numpy as np
 
 class tkinterApp(tk.Tk):
      
@@ -10,9 +14,6 @@ class tkinterApp(tk.Tk):
         self.title('Spike counter')
         container = tk.Frame(self) 
         container.pack()
-  
-        # container.grid_rowconfigure(0, weight = 1)
-        # container.grid_columnconfigure(0, weight = 1)
 
         self.frames = {} 
   
@@ -60,47 +61,115 @@ class Page1(tk.Frame):
 
         canvas = tk.Canvas(self, height=512, width=1024, bg="#263D42")
         canvas.grid(row = 0, column = 0, padx = 10, pady = 10)
-        canvas.create_text(200, 100, text="Spike Count", fill="white", font=('Helvetica 40 bold'))
+        canvas.create_text(520, 100, text="Spike Count", fill="white", font=('Helvetica 60 bold'))
 
-        frame = tk.Frame(self, bg="white")
-        frame.place(relwidth=0.5, relheight=0.5, relx=0.4, rely=0.2)
+        self.str1 = tk.StringVar()
+        self.counter = tk.Label(self, textvariable=self.str1, bg="#263D42", fg="white", font=('Helvetica 180'))
+        self.counter.place(relx=0.4, rely=0.3)
 
         start_button = tk.Button(self, text="Start", padx=10, pady=5, fg="black", bg="#263D42",
-                          command = self.testFunc)
-        start_button.place(relx = 0.05, rely=0.8)
+                          command = self.readCount)
+        start_button.place(relx = 0.25, rely=0.8)
 
         end_button = tk.Button(self, text="Stop", padx=10, pady=5, fg="black", bg="#263D42",
                           command=self.endCounter)
-        end_button.place(relx=0.15, rely=0.8)
+        end_button.place(relx=0.45, rely=0.8)
 
         reset_button = tk.Button(self, text="Reset", padx=10, pady=5, fg="black", bg="#263D42",
-                               command=self.reset)
-        reset_button.place(relx=0.25, rely=0.8)
+                               command = self.restart)
+        reset_button.place(relx=0.65, rely=0.8)
 
-    def testFunc(self):
-        global num
-        global flag
+        self.f = Figure(figsize=(5, 4), dpi=100)
+        self.a = self.f.add_subplot(111)
+        self.plot = FigureCanvasTkAgg(self.f)
 
-        num = num+1
-        if flag == 1:
-            num = 0
-            flag = 0
+    def animate(self):
+        global ax
+        global ay
+        global az
+
+        self.a.clear()
+        self.a.plot(np.arange(0, 50, 1), ax)
+        self.a.plot(np.arange(0, 50, 1), ay)
+        self.a.plot(np.arange(0, 50, 1), az)
+
+    def spikeCount(self):
+        global spikeName
+        global count
+        global spikes
+        global fileHeight
+        global ax
+        global ay
+        global az
+
+        if count > 9: # Need to change for the real run
+            exit(1)
+        file = pd.read_csv("live_data.csv", header=None)
+        file1 = file.iloc[:, 0:151]
+        fileHeight_curr = file.shape[0]
+        if fileHeight == fileHeight_curr:
+            return spikes, ax, ay, az
+        if fileHeight < fileHeight_curr:
+            ax = file1.iloc[count, 1::3]
+            ay = file1.iloc[count, 2::3]
+            az = file1.iloc[count, 3::3]
+
+            label = file.iloc[count, 151]
+
+            if (label == spikeName):
+                spikes += 1
+            count += 1
+            # fileHeight = fileHeight_curr
+            print(ax)
+            return spikes, ax, ay, az
+
+    def readCount(self):
+        global readInterval
+        global spikes
+        global ax
+        global ay
+        global az
+
+        spikes, ax, ay, az = self.spikeCount()
+        self.animate()
+        self.plot.draw()
+        self.plot.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        self.str1.set(spikes)
+        if stopCounter == 1:
             return
-
-        str1 = tk.StringVar(value=str(num))
-        counter = tk.Label(self, textvariable=str1, bg="#263D42", fg="white", font=('Helvetica 180'))
-        counter.place(relx=0.15, rely=0.3)
-        counter.after(1000, self.testFunc)
+        self.counter.after(readInterval*1000, self.readCount)
 
     def endCounter(self):
-        global flag
-        flag = 1
-    #
-    # def reset(self):
-    #     self.
+        global stopCounter
+        stopCounter = True
+
+    def restart(self):
+        global stopCounter
+        global spikes
+        global count
+        stopCounter = False
+        spikes = 0
+        count = 0
+        self.a.clear()
+        self.plot.draw()
+        self.counter.destroy()
+        self.str1 = tk.StringVar()
+        self.counter = tk.Label(self, textvariable=self.str1, bg="#263D42", fg="white", font=('Helvetica 180'))
+        self.counter.place(relx=0.4, rely=0.3)
 
 if __name__ == "__main__":
-    flag = 0
-    num = 0
+    stopCounter = False
+    spikes = 0
+    count = 0 # line counter
+    spikeName = 'shake'
+    readInterval = 1 # read csv every 1 second
+    fileHeight = 0
+
+    ax = []
+    ay = []
+    az = []
+
     app = tkinterApp()
     app.mainloop()
+
